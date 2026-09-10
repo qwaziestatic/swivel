@@ -1,0 +1,38 @@
+{
+  "name": "swivel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Swivel (The Cross-Tab Automator) — turns the browser into an ad-hoc API: extract context from one tab, structure it with Gemini, inject it into another tab's SPA forms.",
+  "type": "module",
+  "scripts": {
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "clean:test": "node -e \"require('fs').rmSync('dist-test',{recursive:true,force:true})\"",
+    "build": "npm run clean && vite build && npm run build:content",
+    "build:content": "vite build --config vite.content.config.ts --mode target && vite build --config vite.content.config.ts --mode gmail && vite build --config vite.content.config.ts --mode generic",
+    "build:test": "npm run clean:test && vite build --outDir dist-test && vite build --config vite.content.config.ts --mode target --outDir dist-test && vite build --config vite.content.config.ts --mode gmail --outDir dist-test && vite build --config vite.content.config.ts --mode generic --outDir dist-test && node tests/patch-test-manifest.mjs",
+    "watch": "npm run build && concurrently -n app,target,gmail,generic \"vite build --watch\" \"vite build --watch --config vite.content.config.ts --mode target\" \"vite build --watch --config vite.content.config.ts --mode gmail\" \"vite build --watch --config vite.content.config.ts --mode generic\"",
+    "fixture": "node tests/fixtures/serve.mjs",
+    "test": "vitest run",
+    "test:e2e": "npm run build:test && playwright test",
+    "package": "npm run build && node scripts/package.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/chrome": "^0.0.287",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  }
+}

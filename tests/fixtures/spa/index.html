@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Swivel Fixture — Create Ticket</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 640px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        color: #1e293b;
+      }
+      label { display: block; margin: 0.75rem 0 0.25rem; font-size: 13px; font-weight: 600; }
+      input, textarea, [contenteditable] {
+        width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 4px;
+        font: inherit; box-sizing: border-box;
+      }
+      [contenteditable] { min-height: 60px; }
+      button { margin-top: 1rem; padding: 8px 14px; border: 0; border-radius: 4px;
+        background: #4f46e5; color: white; font-weight: 600; cursor: pointer; }
+      .combobox { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px;
+        cursor: pointer; user-select: none; background: #fff; }
+      [role="listbox"] { border: 1px solid #cbd5e1; border-radius: 4px; margin-top: 2px; }
+      [role="option"] { padding: 6px 8px; cursor: pointer; }
+      [role="option"]:hover { background: #eef2ff; }
+      #loading { color: #64748b; }
+      .spinner { color: #64748b; }
+    </style>
+  </head>
+  <body>
+    <h1>Swivel Fixture — Create Ticket</h1>
+    <p>
+      This is the adversarial regression target for the Swivel injection
+      engine. The form renders after a deliberate delay, its inputs reject
+      naive value writes, and its priority picker ignores bare synthetic
+      clicks.
+    </p>
+    <div id="loading">Loading the create-ticket form…</div>
+    <div id="app"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "Swivel — The Cross-Tab Automator",
+  "version": "0.1.0",
+  "description": "Extract context from one tab, structure it with AI, and inject it into another tab's forms. Your browser as an ad-hoc API.",
+  "minimum_chrome_version": "116",
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "action": {
+    "default_title": "Open Swivel"
+  },
+
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+
+  "permissions": [
+    "sidePanel",
+    "activeTab",
+    "scripting",
+    "tabs",
+    "storage",
+    "webNavigation"
+  ],
+
+  "host_permissions": [
+    "https://mail.google.com/*"
+  ],
+
+  "optional_host_permissions": [
+    "https://*.atlassian.net/*",
+    "https://generativelanguage.googleapis.com/*"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["gmail.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "commands": {
+    "swivel-extract": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+E",
+        "mac": "Command+Shift+E"
+      },
+      "description": "Open Swivel and extract from the current tab"
+    }
+  }
+}

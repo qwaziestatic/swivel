@@ -1,0 +1,34 @@
+node_modules/
+
+# Build output — all reproducible via `npm run build` / `build:test` / `package`.
+# dist-test/ in particular MUST never ship or be committed: it grants localhost
+# and is marked TEST BUILD (scripts/package.mjs refuses to zip it).
+dist/
+dist-test/
+dist-pack/
+*.zip
+
+# Test artifacts
+test-results/
+playwright-report/
+
+# Secrets. The Gemini API key is user-supplied at runtime and lives in
+# chrome.storage.local — it is never in the repo, never in a build, and never
+# in the message union (Charter Law 2). These patterns exist so that stays
+# true even if someone later adds a local env file for tooling.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets.json
+
+# Local, machine-specific settings — never shared.
+*.local
+.claude/settings.local.json
+.vscode/
+.idea/
+
+# OS noise
+.DS_Store
+Thumbs.db

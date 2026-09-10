@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Swivel</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- Lives at the repo root (not src/sidepanel/) so Vite emits it as
+         dist/sidepanel.html — the exact path manifest.json's side_panel
+         default_path points at. An entry under src/ would be emitted at
+         dist/src/sidepanel/index.html and break the manifest. -->
+    <script type="module" src="/src/sidepanel/main.tsx"></script>
+  </body>
+</html>
