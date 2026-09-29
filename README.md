@@ -18,8 +18,10 @@ engineering charter and the phase-by-phase progress log.
 2. **Synthesize** it into a structured payload with Gemini (in the service
    worker; the key never touches a page).
 3. **Review/edit** the payload in the side panel.
-4. **Automate** it into an open Jira Cloud tab — fill fields, pick the
-   priority, submit — with a dry-run mode and an explicit confirm gate.
+4. **Automate** it into an open Jira Cloud tab — fill the supported fields
+   and submit — with a dry-run mode and an explicit confirm gate. The current
+   Jira recipe does not populate priority because its selector is not yet
+   verified.
 5. **Read back** the new issue key/URL from Jira's success screen.
 6. **Draft** a templated reply in the Gmail thread with the ticket link,
    left **unsent** for you to review.
@@ -182,7 +184,7 @@ gesture, which is what makes both `sidePanel.open()` and the on-demand
    **Automate to target…** → **Run dry run**. Watch the fields on the Jira
    tab get outlined; nothing is submitted.
 5. (0:50) Turn **Dry run** off → **Automate to target…** → **Confirm & run**.
-   The step log goes green; the Jira issue is created.
+   The step log highlights the supported fields; no Jira issue is created.
 6. (1:10) The done view shows the **new issue key/link** (read back from
    Jira). Click **Draft reply in Gmail**.
 7. (1:20) Switch to Gmail: a reply is open in the compose box with the

@@ -77,6 +77,8 @@ export const ERROR_HELP: Record<string, string> = {
     "Couldn't load the automation script into the target tab. If this is Jira, enable the Jira recipe in Settings (grants access). Otherwise reload the target and retry.",
   RUN_DUPLICATE:
     "This exact payload was already submitted to this target — refusing to run again (double-submit guard).",
+  IDEMPOTENCY_UNAVAILABLE:
+    "Swivel could not activate its persistent double-submit guard, so it refused to submit anything. Reload the target tab and retry.",
   SELECTOR_NOT_FOUND:
     "A field wasn't found on the target page — the recipe's selectors may be stale for this instance. Try 'Test selectors' in Settings.",
   OPTION_NOT_FOUND:

@@ -58,6 +58,11 @@ export interface ExtractedContext {
   bodyText: string;
 }
 
+const MAX_SOURCE_URL_LENGTH = 2048;
+const MAX_SUBJECT_LENGTH = 1000;
+const MAX_SENDER_LENGTH = 1000;
+const MAX_BODY_LENGTH = 100_000;
+
 /**
  * Typed reasons extraction can fail — following the PING_FAILED pattern:
  * machine-readable code in the message, human wording owned by the panel.
@@ -79,8 +84,22 @@ export type ExtractErrorCode =
 export function isExtractedContext(value: unknown): value is ExtractedContext {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
+  if (
+    typeof v.sourceUrl !== "string" ||
+    v.sourceUrl.length > MAX_SOURCE_URL_LENGTH ||
+    !/^https?:\/\//i.test(v.sourceUrl)
+  ) {
+    return false;
+  }
+  if (
+    (typeof v.subject === "string" && v.subject.length > MAX_SUBJECT_LENGTH) ||
+    (typeof v.sender === "string" && v.sender.length > MAX_SENDER_LENGTH) ||
+    typeof v.bodyText !== "string" ||
+    v.bodyText.length > MAX_BODY_LENGTH
+  ) {
+    return false;
+  }
   return (
-    typeof v.sourceUrl === "string" &&
     (typeof v.subject === "string" || v.subject === null) &&
     (typeof v.sender === "string" || v.sender === null) &&
     typeof v.bodyText === "string"
@@ -307,6 +326,8 @@ export interface SelectorTestResult {
 export interface TestSelectorsRequestMessage {
   type: "TEST_SELECTORS_REQUEST";
   recipeId: string;
+  /** Existing target tab chosen by the user after a multiple-tab result. */
+  tabId?: number;
 }
 
 /** Hub → target content script: resolve each selector, act on none. */

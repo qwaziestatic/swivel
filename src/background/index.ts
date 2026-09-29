@@ -193,16 +193,14 @@ async function getActiveTab(): Promise<chrome.tabs.Tab> {
   return tab;
 }
 
-/** Find the Gmail thread to reply into: prefer the tab we extracted from
- *  (still the same thread), else any open Gmail tab. Returns a tabId or null. */
+/** Find the exact Gmail tab we extracted from. Never fall back to another
+ *  Gmail tab: drafting into a different conversation is worse than asking
+ *  the user to reopen the source thread. */
 async function resolveGmailTab(): Promise<number | null> {
   const { sourceTabId } = await getState();
-  if (sourceTabId !== null) {
-    const tab = await chrome.tabs.get(sourceTabId).catch(() => undefined);
-    if (tab?.url?.startsWith("https://mail.google.com/")) return sourceTabId;
-  }
-  const [tab] = await chrome.tabs.query({ url: "https://mail.google.com/*" });
-  return tab?.id ?? null;
+  if (sourceTabId === null) return null;
+  const tab = await chrome.tabs.get(sourceTabId).catch(() => undefined);
+  return tab?.url?.startsWith("https://mail.google.com/") ? sourceTabId : null;
 }
 
 /** Fire-and-forget message to the side panel. Rejection is EXPECTED when
@@ -1237,7 +1235,40 @@ chrome.runtime.onMessage.addListener(
             });
             return;
           }
-          const [tab] = await findTargetTabs(recipe.urlPatterns);
+          let tab: chrome.tabs.Tab | undefined;
+          if (message.tabId !== undefined) {
+            const chosen = await chrome.tabs.get(message.tabId).catch(() => undefined);
+            if (chosen?.url && matchesAnyPattern(chosen.url, recipe.urlPatterns)) {
+              tab = chosen;
+            } else {
+              sendResponse({
+                type: "AUTOMATION_ERROR",
+                runId: null,
+                errorCode: "TARGET_NOT_OPEN",
+                detail: "The selected tab is no longer a valid target.",
+              });
+              return;
+            }
+          } else {
+            const matches = await findTargetTabs(recipe.urlPatterns);
+            if (matches.length > 1) {
+              const candidates: TargetCandidate[] = matches
+                .filter((t) => t.id !== undefined)
+                .map((t) => ({
+                  tabId: t.id!,
+                  title: t.title ?? "(untitled)",
+                  url: t.url ?? "",
+                }));
+              sendResponse({
+                type: "TARGET_CANDIDATES",
+                recipeId: message.recipeId,
+                dryRun: false,
+                candidates,
+              });
+              return;
+            }
+            tab = matches[0];
+          }
           if (!tab?.id) {
             sendResponse({
               type: "AUTOMATION_ERROR",

@@ -67,6 +67,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
     recipeId: string;
     results?: SelectorTestResult[];
     error?: string;
+    candidates?: { tabId: number; title: string; url: string }[];
   } | null>(null);
 
   const refreshPermissions = async () => {
@@ -155,13 +156,15 @@ export function Settings({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const testSelectors = async (recipeId: string) => {
+  const testSelectors = async (recipeId: string, tabId?: number) => {
     setTesting(recipeId);
     setTestResult(null);
     try {
       const reply = await sendToHub({ type: "TEST_SELECTORS_REQUEST", recipeId });
       if (reply?.type === "TEST_SELECTORS_RESULT") {
         setTestResult({ recipeId, results: reply.results });
+      } else if (reply?.type === "TARGET_CANDIDATES") {
+        setTestResult({ recipeId, candidates: reply.candidates });
       } else if (reply?.type === "AUTOMATION_ERROR") {
         setTestResult({ recipeId, error: helpFor(reply.errorCode) });
       }
@@ -317,6 +320,9 @@ export function Settings({ onClose }: { onClose: () => void }) {
                 <SelectorReport
                   results={testResult.results}
                   error={testResult.error}
+                  candidates={testResult.candidates}
+                  onChoose={(tabId) => void testSelectors(r.id, tabId)}
+                  disabled={testing === r.id}
                 />
               )}
             </div>
@@ -330,12 +336,44 @@ export function Settings({ onClose }: { onClose: () => void }) {
 function SelectorReport({
   results,
   error,
+  candidates,
+  onChoose,
+  disabled,
 }: {
   results?: SelectorTestResult[];
   error?: string;
+  candidates?: { tabId: number; title: string; url: string }[];
+  onChoose: (tabId: number) => void;
+  disabled: boolean;
 }) {
   if (error) {
     return <p className="mt-2 text-[11px] text-rose-300">{error}</p>;
+  }
+  if (candidates) {
+    return (
+      <div className="mt-2 text-[11px]">
+        <p className="text-indigo-300">Multiple matching tabs are open — choose one to test:</p>
+        <ul className="mt-1 space-y-1">
+          {candidates.map((candidate) => (
+            <li key={candidate.tabId}>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => onChoose(candidate.tabId)}
+                className="w-full rounded border border-slate-700 px-2 py-1 text-left hover:border-indigo-500 disabled:opacity-50"
+              >
+                <span className="block truncate text-slate-200">
+                  {candidate.title || "(untitled)"}
+                </span>
+                <span className="block truncate font-mono text-[10px] text-slate-500">
+                  {candidate.url}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
   }
   if (!results) return null;
   const failed = results.filter((r) => !r.resolved);

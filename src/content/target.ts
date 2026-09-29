@@ -39,6 +39,7 @@ import {
 } from "./lib/waitForElement";
 import { highlight, insertRichText, realisticClick, setNativeValue } from "./lib/inject";
 import { isSendElement, looksLikeSendSelector } from "./lib/sendGuard";
+import { createRunGuard, IdempotencyUnavailableError } from "./lib/idempotency";
 
 declare global {
   interface Window {
@@ -63,25 +64,10 @@ class StepError extends Error {
 
 // --- Idempotency ------------------------------------------------------------
 const seenRuns = new Set<string>();
-const runKey = (runId: string) => `swivel:run:${runId}`;
-
-async function storageHasRun(runId: string): Promise<boolean> {
-  try {
-    const s = await chrome.storage.session.get(runKey(runId));
-    return s[runKey(runId)] !== undefined;
-  } catch {
-    // storage.session may be inaccessible if the worker hasn't raised the
-    // access level yet; fall back to the page-scoped guard only.
-    return false;
-  }
-}
-async function storageMarkRun(runId: string, status: string): Promise<void> {
-  try {
-    await chrome.storage.session.set({ [runKey(runId)]: status });
-  } catch {
-    /* page-scoped Set still guards this page */
-  }
-}
+const runGuard = createRunGuard({
+  get: (key) => chrome.storage.session.get(key),
+  set: (items) => chrome.storage.session.set(items),
+});
 
 // --- Reporting --------------------------------------------------------------
 function report(message: SwivelMessage): void {
@@ -115,6 +101,9 @@ function classify(err: unknown): { code: string; detail: string; hint?: string }
   }
   if (err instanceof StepError) {
     return { code: err.code, detail: err.message, hint: err.hint };
+  }
+  if (err instanceof IdempotencyUnavailableError) {
+    return { code: err.code, detail: err.message };
   }
   return { code: "STEP_FAILED", detail: err instanceof Error ? err.message : String(err) };
 }
@@ -241,8 +230,19 @@ async function runRecipe(msg: RunRecipeMessage): Promise<void> {
   if (!dryRun) {
     if (seenRuns.has(runId)) return reportDuplicate(runId);
     seenRuns.add(runId); // atomic: blocks a concurrent double-click on this page
-    if (await storageHasRun(runId)) return reportDuplicate(runId);
-    await storageMarkRun(runId, "in-progress");
+    try {
+      if (await runGuard.has(runId)) return reportDuplicate(runId);
+      await runGuard.mark(runId, "in-progress");
+    } catch (err) {
+      const failure = classify(err);
+      report({
+        type: "AUTOMATION_ERROR",
+        runId,
+        errorCode: failure.code,
+        detail: failure.detail,
+      });
+      return;
+    }
   }
 
   const controller = new AbortController();
@@ -318,12 +318,12 @@ async function runRecipe(msg: RunRecipeMessage): Promise<void> {
           errorCode: code,
           detail: `Step ${i + 1} (${step.description}) [${selectorOf(step)}]: ${detail}${hint ? ` — ${hint}` : ""}`,
         });
-        if (!dryRun) await storageMarkRun(runId, "failed");
+        if (!dryRun) await runGuard.mark(runId, "failed");
         return;
       }
     }
 
-    if (!dryRun) await storageMarkRun(runId, "done");
+    if (!dryRun) await runGuard.mark(runId, "done");
     console.log(
       `[swivel:target] run ${runId} finished — dryRun=${outcome.dryRun} ` +
         `submitted=${outcome.submitted} executed=${outcome.stepsExecuted} skipped=${outcome.stepsSkipped}`
