@@ -12,6 +12,14 @@ session is the auth. Swivel automates the tabs *you* are already logged into.
 **Status: feature-complete (Phases 1–10).** See `CLAUDE.md` for the
 engineering charter and the phase-by-phase progress log.
 
+## Side panel
+
+![Swivel side panel](docs/assets/swivel-side-panel.png)
+
+The screenshot shows the initial control-center view. The panel opens from
+the extension action and keeps extraction, review, target selection, dry-run,
+and confirmation in one workflow.
+
 ## What it does (the loop)
 
 1. **Extract** the open Gmail thread (subject, sender, cleaned body).
